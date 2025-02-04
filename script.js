@@ -13,7 +13,6 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const closeModal = document.querySelector('.close-modal');
 const themeSelect = document.getElementById('theme-select');
-const messageSound = document.getElementById('message-sound');
 const autoScroll = document.getElementById('auto-scroll');
 const clearAllChats = document.getElementById('clear-all-chats');
 
@@ -36,7 +35,6 @@ let currentChatId = localStorage.getItem('currentChatId') || chats[0].id;
 // Settings management
 let settings = JSON.parse(localStorage.getItem('settings')) || {
     theme: 'dark',
-    messageSound: false,
     autoScroll: true
 };
 
@@ -231,11 +229,6 @@ function handleThemeChange(theme) {
     saveSettings();
 }
 
-function handleMessageSoundChange(enabled) {
-    settings.messageSound = enabled;
-    saveSettings();
-}
-
 function handleAutoScrollChange(enabled) {
     settings.autoScroll = enabled;
     saveSettings();
@@ -243,7 +236,6 @@ function handleAutoScrollChange(enabled) {
 
 // Settings event listeners
 themeSelect.addEventListener('change', (e) => handleThemeChange(e.target.value));
-messageSound.addEventListener('change', (e) => handleMessageSoundChange(e.target.checked));
 autoScroll.addEventListener('change', (e) => handleAutoScrollChange(e.target.checked));
 
 clearAllChats.addEventListener('click', () => {
@@ -299,7 +291,6 @@ function initializeInterface() {
     // Apply saved settings
     applyTheme(settings.theme);
     themeSelect.value = settings.theme;
-    messageSound.checked = settings.messageSound;
     autoScroll.checked = settings.autoScroll;
     
     // Initialize chat interface
