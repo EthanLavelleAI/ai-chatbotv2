@@ -4,24 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            AI Chatbot
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <div class="message bot-message">
-                Hello! How can I help you today?
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button id="new-chat" class="new-chat-btn">
+                    <i class="fas fa-plus"></i> New Chat
+                </button>
+            </div>
+            <div class="chat-history-list" id="chat-history-list">
+                <!-- Chat history items will be added here -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="settings-btn" class="settings-btn">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
             </div>
         </div>
-        <div class="typing-indicator" id="typing-indicator">
-            EthanAI is typing...
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="current-chat-title" id="current-chat-title">New Chat</div>
+                <button id="mobile-sidebar-toggle" class="mobile-sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    <div class="message-content">Hello! How can I help you today?</div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                EthanAI is typing...
+            </div>
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type your message here...">
+                <button id="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
-        <div class="chat-input">
-            <input type="text" id="message-input" placeholder="Type your message here...">
-            <button id="send-button">Send</button>
+        
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3>Theme</h3>
+                        <div class="setting-item">
+                            <label for="theme-select">Interface Theme</label>
+                            <select id="theme-select">
+                                <option value="dark">Dark</option>
+                                <option value="darker">Darker</option>
+                                <option value="light">Light</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Chat</h3>
+                        <div class="setting-item">
+                            <label for="message-sound">Message Sound</label>
+                            <input type="checkbox" id="message-sound">
+                        </div>
+                        <div class="setting-item">
+                            <label for="auto-scroll">Auto-scroll to Bottom</label>
+                            <input type="checkbox" id="auto-scroll" checked>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Data</h3>
+                        <div class="setting-item">
+                            <button id="clear-all-chats" class="danger-btn">
+                                Clear All Chat History
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
