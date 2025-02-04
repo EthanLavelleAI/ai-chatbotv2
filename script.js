@@ -78,7 +78,20 @@ function formatCodeBlocks(text) {
                 formatted += parts[i];
             } else {
                 const codeContent = parts[i].trim();
-                formatted += `<pre class="code-block"><code>${codeContent}</code></pre>`;
+                formatted += `
+                    <div class="code-block">
+                        <div class="code-block-header">
+                            <button class="code-block-btn copy-btn">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                            <button class="code-block-btn download-btn">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                        </div>
+                        <pre><code>${codeContent}</code></pre>
+                    </div>`;
             }
         }
         return formatted;
@@ -300,3 +313,36 @@ function initializeInterface() {
 
 // Start the app
 initializeInterface();
+
+document.addEventListener('click', async (e) => {
+    const target = e.target.closest('.code-block-btn');
+    if (!target) return;
+
+    const codeBlock = target.closest('.code-block');
+    const codeContent = codeBlock.querySelector('code').textContent;
+
+    if (target.classList.contains('copy-btn')) {
+        try {
+            await navigator.clipboard.writeText(codeContent);
+            target.classList.add('copied');
+            const originalText = target.innerHTML;
+            target.innerHTML = '<i class="fas fa-check"></i>Copied!';
+            setTimeout(() => {
+                target.classList.remove('copied');
+                target.innerHTML = originalText;
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    } else if (target.classList.contains('download-btn')) {
+        const blob = new Blob([codeContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'code-snippet.txt';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+});
