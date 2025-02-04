@@ -8,6 +8,18 @@ const newChatButton = document.getElementById('new-chat');
 const chatHistoryList = document.getElementById('chat-history-list');
 const currentChatTitle = document.getElementById('current-chat-title');
 
+// Settings elements
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeModal = document.querySelector('.close-modal');
+const themeSelect = document.getElementById('theme-select');
+const messageSound = document.getElementById('message-sound');
+const autoScroll = document.getElementById('auto-scroll');
+const clearAllChats = document.getElementById('clear-all-chats');
+
+// Create message sound effect
+const messageSoundEffect = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAABQADQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxDsAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+
 // Chat history management
 let chats = JSON.parse(localStorage.getItem('chats')) || [{
     id: generateId(),
@@ -21,6 +33,13 @@ let chats = JSON.parse(localStorage.getItem('chats')) || [{
 
 let currentChatId = localStorage.getItem('currentChatId') || chats[0].id;
 
+// Settings management
+let settings = JSON.parse(localStorage.getItem('settings')) || {
+    theme: 'dark',
+    messageSound: false,
+    autoScroll: true
+};
+
 function generateId() {
     return Math.random().toString(36).substring(2, 15);
 }
@@ -30,6 +49,10 @@ function saveChats() {
     localStorage.setItem('currentChatId', currentChatId);
 }
 
+function saveSettings() {
+    localStorage.setItem('settings', JSON.stringify(settings));
+}
+
 function getCurrentChat() {
     return chats.find(chat => chat.id === currentChatId);
 }
@@ -37,7 +60,6 @@ function getCurrentChat() {
 function updateChatTitle(chatId, firstMessage) {
     const chat = chats.find(c => c.id === chatId);
     if (chat && chat.title === 'New Chat' && firstMessage) {
-        // Use the first few words of the first message as the title
         chat.title = firstMessage.split(' ').slice(0, 4).join(' ') + '...';
         saveChats();
         updateSidebar();
@@ -88,9 +110,14 @@ function switchChat(chatId) {
     saveChats();
     updateSidebar();
     
-    // Close sidebar on mobile after selecting a chat
     if (window.innerWidth <= 768) {
         sidebar.classList.remove('show');
+    }
+}
+
+function scrollToBottom() {
+    if (settings.autoScroll) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 }
 
@@ -112,7 +139,16 @@ function loadMessages(messages) {
         messageDiv.appendChild(timeDiv);
         chatMessages.appendChild(messageDiv);
     });
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    scrollToBottom();
+}
+
+function playMessageSound() {
+    if (settings.messageSound) {
+        messageSoundEffect.currentTime = 0;
+        messageSoundEffect.play().catch(() => {
+            // Ignore autoplay errors
+        });
+    }
 }
 
 function addMessage(content, isUser) {
@@ -141,7 +177,11 @@ function addMessage(content, isUser) {
     messageDiv.appendChild(contentDiv);
     messageDiv.appendChild(timeDiv);
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    scrollToBottom();
+    if (!isUser) {
+        playMessageSound();
+    }
 }
 
 function createNewChat() {
@@ -163,19 +203,15 @@ async function handleMessage() {
     const message = messageInput.value.trim();
     if (!message) return;
 
-    // Add user message
     addMessage(message, true);
     messageInput.value = '';
 
-    // Show typing indicator
     typingIndicator.style.display = 'block';
 
     try {
-        // Get bot response
         const response = await puter.ai.chat(message, {model: 'claude-3-5-sonnet'});
         const botResponse = response.message.content[0].text;
         
-        // Hide typing indicator and add bot response
         typingIndicator.style.display = 'none';
         addMessage(botResponse, false);
     } catch (error) {
@@ -184,68 +220,31 @@ async function handleMessage() {
     }
 }
 
-// Event Listeners
-sendButton.addEventListener('click', handleMessage);
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        handleMessage();
-    }
-});
-
-newChatButton.addEventListener('click', createNewChat);
-
-sidebarToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('show');
-});
-
-// Settings Management
-const settingsBtn = document.getElementById('settings-btn');
-const settingsModal = document.getElementById('settings-modal');
-const closeModal = document.querySelector('.close-modal');
-const themeSelect = document.getElementById('theme-select');
-const messageSound = document.getElementById('message-sound');
-const autoScroll = document.getElementById('auto-scroll');
-const clearAllChats = document.getElementById('clear-all-chats');
-
-// Load settings from localStorage
-let settings = JSON.parse(localStorage.getItem('settings')) || {
-    theme: 'dark',
-    messageSound: false,
-    autoScroll: true
-};
-
-// Apply settings on load
-function applySettings() {
-    // Apply theme
-    document.body.className = settings.theme;
-    themeSelect.value = settings.theme;
-    
-    // Apply other settings
-    messageSound.checked = settings.messageSound;
-    autoScroll.checked = settings.autoScroll;
+// Settings handlers
+function applyTheme(theme) {
+    document.body.className = theme;
 }
 
-// Save settings to localStorage
-function saveSettings() {
-    localStorage.setItem('settings', JSON.stringify(settings));
+function handleThemeChange(theme) {
+    settings.theme = theme;
+    applyTheme(theme);
+    saveSettings();
+}
+
+function handleMessageSoundChange(enabled) {
+    settings.messageSound = enabled;
+    saveSettings();
+}
+
+function handleAutoScrollChange(enabled) {
+    settings.autoScroll = enabled;
+    saveSettings();
 }
 
 // Settings event listeners
-themeSelect.addEventListener('change', (e) => {
-    settings.theme = e.target.value;
-    applySettings();
-    saveSettings();
-});
-
-messageSound.addEventListener('change', (e) => {
-    settings.messageSound = e.target.checked;
-    saveSettings();
-});
-
-autoScroll.addEventListener('change', (e) => {
-    settings.autoScroll = e.target.checked;
-    saveSettings();
-});
+themeSelect.addEventListener('change', (e) => handleThemeChange(e.target.value));
+messageSound.addEventListener('change', (e) => handleMessageSoundChange(e.target.checked));
+autoScroll.addEventListener('change', (e) => handleAutoScrollChange(e.target.checked));
 
 clearAllChats.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
@@ -281,9 +280,32 @@ settingsModal.addEventListener('click', (e) => {
     }
 });
 
-// Initialize settings
-applySettings();
+// Chat event listeners
+sendButton.addEventListener('click', handleMessage);
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleMessage();
+    }
+});
 
-// Initialize the chat interface
-updateSidebar();
-switchChat(currentChatId);
+newChatButton.addEventListener('click', createNewChat);
+
+sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+});
+
+// Initialize the interface
+function initializeInterface() {
+    // Apply saved settings
+    applyTheme(settings.theme);
+    themeSelect.value = settings.theme;
+    messageSound.checked = settings.messageSound;
+    autoScroll.checked = settings.autoScroll;
+    
+    // Initialize chat interface
+    updateSidebar();
+    switchChat(currentChatId);
+}
+
+// Start the app
+initializeInterface();
